@@ -1,0 +1,28 @@
+{% load render_bundle from webpack_loader %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+</head>
+<body>
+
+{% if user.is_authenticated %}
+    <script>
+        const user={
+            username: '{{ user.username }}',
+            avatar: '{{ user.avatar }}',
+            id: '{{ user.id }}'
+        };
+    </script>
+{% endif %}
+
+
+
+<!-- This part is in the screenshot at the bottom! -->
+<div id="app"></div>
+{% render_bundle 'app' %}
+</body>
+</html>
+
