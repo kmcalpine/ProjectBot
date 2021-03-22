@@ -1,14 +1,20 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
+import Guilds from '../views/Guilds.vue'
 
 Vue.use(VueRouter)
 
 const routes = [
   {
     path: '/',
-    name: 'Home',
-    component: Home
+    name: 'Guilds',
+    component: Guilds
+  },
+  {
+    path: '/guilds',
+    name: 'Guilds',
+    component: Guilds
   },
   {
     path: '/about',
@@ -19,7 +25,7 @@ const routes = [
     component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
   },
   {
-    path: '/api/commands',
+    path: '/api/commands/:server',
     name: 'Reporters',
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route

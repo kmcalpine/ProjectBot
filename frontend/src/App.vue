@@ -1,6 +1,10 @@
 <template>
   <div id="app">
-    <Api :user="user"></Api>
+    <router-view
+            :user="user"
+            @upApiView="this.showApi"
+            v-if="!this.apiShow">
+    </router-view>
   </div>
 </template>
 
@@ -22,7 +26,9 @@
           username: '',
           avatar: '',
           id: ''
-        }
+        },
+        apiShow: false,
+        currentGuild: '',
       }
     },
     created() {
@@ -30,6 +36,12 @@
       this.user.username = this.username;
       this.user.avatar = this.avatar;
       this.user.id = this.id;
+    },
+    methods: {
+      showApi: function() {
+        this.apiShow = true;
+        console.log('i am here');
+      },
     }
   }
 </script>

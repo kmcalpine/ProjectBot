@@ -10,8 +10,15 @@ from django.shortcuts import render
 import json
 import requests
 
+
+
 @login_required(login_url='/oauth2/login')
-def default_view(request):
+def guild_view(request):
+    template_name = "index.html"
+    return render(request, template_name)
+
+@login_required(login_url='/oauth2/login')
+def default_view(request, server):
     template_name = "index.html"
     return render(request, template_name)
 
@@ -35,7 +42,7 @@ def discord_login_redirect(request: HttpRequest):
     discord_user = list(discord_user).pop()
     print(discord_user)
     login(request, discord_user)
-    return redirect('/api/commands')
+    return redirect('/guilds')
 
 def exchange_code(code: str):
     data = {
@@ -44,7 +51,7 @@ def exchange_code(code: str):
         'grant_type': 'authorization_code',
         'code': code,
         'redirect_uri': 'http://127.0.0.1:8000/oauth2/login/redirect',
-        'scope': 'identify'
+        'scope': 'identify guilds bot'
     }
     headers = {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -53,12 +60,37 @@ def exchange_code(code: str):
     print(response)
     credentials = response.json()
     access_token = credentials['access_token']
-    response = requests.get('https://discord.com/api/v6/users/@me', headers= {
+    response = requests.get('https://discord.com/api/v8/users/@me', headers= {
         'Authorization': 'Bearer %s' % access_token
     })
-    print(response)
+    print(response.json())
+
     user = response.json()
+    user['access_token'] = access_token
+
     return user
+
+@login_required(login_url='/oauth2/login')
+def discord_user_guilds(request):
+    user = None
+    if request.user.is_authenticated():
+        print(request.user.id)
+        user = request.user
+        response = requests.get('https://discord.com/api/v8/users/@me/guilds', headers={
+            'Authorization': 'Bot ',
+        })
+        print('here')
+        print(response.json()[0])
+
+        result = {}
+        i = 0
+        for item in response.json():
+            result[i] = item
+            i += 1
+        return JsonResponse(result)
+
+
+    return JsonResponse({'msg': 'authenticated'})
 
 @login_required(login_url='/oauth2/login')
 def discord_commands(request):
@@ -66,37 +98,29 @@ def discord_commands(request):
     return JsonResponse({ 'msg': 'authenticated' })
 
 @login_required(login_url='/oauth2/login')
-def reporter_view(request):
+def reporter_view(request, server):
     print('here')
     if request.method == 'POST':
         print('POSTING')
         data = json.loads(request.body.decode('utf-8'))
         print(data)
         Reporter.objects.create(
+            guild = server,
             full_name = data['cmd_name'],
             msg_response = data['msg_response']
         )
-    queryset = Reporter.objects.all()
+    queryset = Reporter.objects.filter(guild=server);
     qs_json = serializers.serialize('json', queryset)
     return HttpResponse(qs_json, content_type='application/json')
 
-@login_required(login_url='/oauth2/login')
-def reporter_view_cmd(request, cmd):
-    print('here2')
-    queryset = Reporter.objects.filter(full_name=cmd)
-    qs_json = serializers.serialize('json', queryset)
-    print(qs_json)
-    return HttpResponse(qs_json, content_type='application/json')
-
-@login_required(login_url='/oauth2/login')
-def reporter_view_id(request, id):
-    queryset = Reporter.objects.filter(id=id)
+def reporter_view_id(request, server, id):
+    queryset = Reporter.objects.filter(guild=server).filter(full_name=id)
     qs_json = serializers.serialize('json', queryset)
 
     return HttpResponse(qs_json, content_type='application/json')
 
 @login_required(login_url='/oauth2/login')
-def reporter_view_id_delete(request, id):
+def reporter_view_id_delete(request, server, id):
     queryset = Reporter.objects.filter(id=id).delete()
     return HttpResponse(None, content_type='application/json')
 

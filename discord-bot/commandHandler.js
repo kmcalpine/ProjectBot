@@ -13,8 +13,9 @@ class Commands {
 
             args = args.splice(1);
             try {
-                let response = await axios.get('http://127.0.0.1:8000/api/commands/' + cmd +'/');
-                message.channel.send(response.data[0].fields.msg_response)
+                console.log('reading message');
+                let response = await axios.get('http://127.0.0.1:8000/api/commands/' + message.guild.id + '/' + cmd +'.json/');
+                message.channel.send(response.data[0].fields.msg_response);
             } catch (e) {
                 console.log(e)
             }

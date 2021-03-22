@@ -46,6 +46,8 @@
 <script>
   import ApiComponent from '@/components/ApiComponent.vue'
   import ResultPopup from '@/components/ResultPopup.vue'
+  import store from '../store'
+  import {mapGetters} from 'vuex'
   import axios from 'axios';
 
   export default {
@@ -55,7 +57,7 @@
       ResultPopup,
     },
     props: {
-      user: Object
+      user: Object,
     },
     data() {
       return {
@@ -67,20 +69,34 @@
         popupTimeout: null,
         responseMsg: '',
         loggedIn: false,
-        profileSrc: ''
+        profileSrc: '',
       };
     },
     methods: {
       loadReporters: async function() {
-        let response = await axios.get('/api/commands.json');
+        let url = this.$route.path.split('/');
+        let guild = this.$route.path.split('/').pop();
+        if (guild === '') {
+          guild = url.pop();
+        }
+        let response = await axios.get('/api/commands/' + guild + '.json');
         //console.log(response);
+
         this.commandData = response.data;
         //console.log(this.commandData);
       },
       addCommand: async function() {
+        let url = this.$route.path.split('/');
+        let guild = this.$route.path.split('/').pop();
+        if (guild === '') {
+          guild = url.pop();
+        }
         axios.defaults.xsrfCookieName = 'csrftoken';
         axios.defaults.xsrfHeaderName = 'X-CSRFToken';
-        let response = await axios.post('/api/commands.json', {
+
+        console.log(this.$route.path.split('/').pop());
+        let response = await axios.post('/api/commands/' + guild + '.json', {
+          guild: guild,
           cmd_name: this.inputCommandName,
           msg_response: this.responseMsg,
         });
@@ -88,9 +104,14 @@
         this.commandData = response.data;
       },
       deleteCommand: async function(item) {
+        let url = this.$route.path.split('/');
+        let guild = this.$route.path.split('/').pop();
+        if (guild === '') {
+          guild = url.pop();
+        }
         axios.defaults.xsrfCookieName = 'csrftoken';
         axios.defaults.xsrfHeaderName = 'X-CSRFToken';
-        let response = await axios.delete('/api/commands/delete/' + item.pk + '/', {
+        let response = await axios.delete('/api/commands/delete/' + guild + '/' + item.pk + '/', {
           headers: { Authorization: 'Token token' },
         });
         this.resultPopup = item;
@@ -109,14 +130,17 @@
       },
     },
     computed: {
+      ...mapGetters({
+        curGuild: 'currentGuild'
+      }),
       isAddDisabled() {
         return this.inputCommandName.length > 0 && this.responseMsg.length > 0;
-      }
+      },
     },
     created() {
       this.loadReporters();
       this.profileSrc = 'https://cdn.discordapp.com/avatars/' + this.user.id + '/' + this.user.avatar + '.png';
-    }
+    },
   }
 </script>
 <!-- Add "scoped" attribute to limit CSS to this component only -->
